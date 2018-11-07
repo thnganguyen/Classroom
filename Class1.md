@@ -212,3 +212,11 @@ Sortiment_ord %>%
 ```
 
 ![](Class1_files/figure-markdown_github/unnamed-chunk-2-3.png)
+
+``` r
+Sortiment_ord %>%
+  filter(Varugrupp %in% c("Vitt vin", "R\303\266tt vin", "Ros\303\251vin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+  ggplot(aes(x = Argang, y = PrisPerLiter)) + geom_point() + facet_wrap(~ Varugrupp)
+```
+
+![](Class1_files/figure-markdown_github/unnamed-chunk-2-4.png)
