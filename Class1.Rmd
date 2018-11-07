@@ -1,0 +1,27 @@
+---
+title: "Class1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+Sortiment_hela <- read.csv("Class_files/systembolaget2018-10-08.csv")
+head(Sortiment_hela)
+
+MySortiment <- Sortiment_hela %>%
+  mutate(Alkoholhalt = as.numeric(gsub("%","",Alkoholhalt))/100)
+
+MySortiment <- Sortiment_hela %>%
+  mutate(Varugrupp = ifelse(Varugrupp=="Röda", "Rött vin", ifelse(Varugrupp=="Vita", "Vitt vin", Varugrupp)))
+
+PrisMax <- Sortiment_hela %>%
+  filter(PrisPerLiter == max(PrisPerLiter)) %>%
+  select(Namn)
+PrisMax
+
+```
+
