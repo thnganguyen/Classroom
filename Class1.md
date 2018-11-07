@@ -220,3 +220,28 @@ Sortiment_ord %>%
 ```
 
 ![](Class1_files/figure-markdown_github/unnamed-chunk-2-4.png)
+
+``` r
+Film <- read.csv("Class_files/Film_events_2018-11-07.csv")
+FilmSO <- Film %>%
+  filter(eventTicketStatus=="soldout")
+Film %>% 
+  group_by(venueId) %>% 
+  mutate(N=n()) %>%
+  ungroup() %>% 
+  filter(N==max(N)) %>%
+  slice(1) %>%
+  select(venueName)
+```
+
+    ## # A tibble: 1 x 1
+    ##   venueName
+    ##   <fct>    
+    ## 1 Sture 1
+
+``` r
+FilmSO %>% 
+  ggplot(aes(x = eventDate, y = eventName_en)) + geom_point() 
+```
+
+![](Class1_files/figure-markdown_github/unnamed-chunk-4-1.png)
