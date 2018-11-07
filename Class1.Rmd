@@ -29,7 +29,6 @@ Expensive <- Sortiment_ord %>%
   slice(1:10) %>%
   select(Namn, PrisPerLiter, Varugrupp, Alkoholhalt)
 kable(Expensive, format = "html")
-
 ```
 ```{r}
 ggplot(Sortiment_ord, aes(x = Alkoholhalt, y = PrisPerLiter, color = Varugrupp)) + 
@@ -46,5 +45,3 @@ Sortiment_ord %>%
   ggplot(aes(x = Argang, y = PrisPerLiter, color = Varugrupp)) + geom_point()
     
 ```
-
-

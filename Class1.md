@@ -318,7 +318,11 @@ ggplot(Sortiment_ord, aes(x = Varugrupp, y = PrisPerLiter)) +
 
 ``` r
 Sortiment_ord %>%
+<<<<<<< HEAD
   filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+=======
+  filter(Varugrupp %in% c("Vitt vin", "R\303\266tt vin", "Ros\303\251vin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+>>>>>>> Working on class1
   ggplot(aes(x = Argang, y = PrisPerLiter, color = Varugrupp)) + geom_point()
 ```
 
