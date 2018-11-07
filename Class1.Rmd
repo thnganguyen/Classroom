@@ -5,6 +5,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -12,16 +13,38 @@ knitr::opts_chunk$set(echo = TRUE)
 Sortiment_hela <- read.csv("Class_files/systembolaget2018-10-08.csv")
 head(Sortiment_hela)
 
-MySortiment <- Sortiment_hela %>%
-  mutate(Alkoholhalt = as.numeric(gsub("%","",Alkoholhalt))/100)
-
-MySortiment <- Sortiment_hela %>%
-  mutate(Varugrupp = ifelse(Varugrupp=="Röda", "Rött vin", ifelse(Varugrupp=="Vita", "Vitt vin", Varugrupp)))
+Sortiment_ord <- Sortiment_hela %>%
+  mutate(Alkoholhalt = as.numeric(gsub("%","",Alkoholhalt))/100) %>%
+  mutate(Varugrupp = ifelse(Varugrupp=="Röda", "Rött vin", ifelse(Varugrupp=="Vita", "Vitt vin", levels(Varugrupp)))) %>%
+  filter(SortimentText == "Ordinarie sortiment")
+head(Sortiment_ord)
 
 PrisMax <- Sortiment_hela %>%
   filter(PrisPerLiter == max(PrisPerLiter)) %>%
   select(Namn)
 PrisMax
 
+Expensive <- Sortiment_ord %>%
+  arrange(desc(PrisPerLiter)) %>%
+  slice(1:10) %>%
+  select(Namn, PrisPerLiter, Varugrupp, Alkoholhalt)
+kable(Expensive, format = "html")
+
 ```
+```{r}
+ggplot(Sortiment_ord, aes(x = Alkoholhalt, y = PrisPerLiter, color = Varugrupp)) + 
+  geom_point() + 
+  scale_y_log10()
+
+ggplot(Sortiment_ord, aes(x = Varugrupp, y = PrisPerLiter)) + 
+  geom_point() + 
+  scale_y_log10() + 
+  coord_flip()
+
+Sortiment_ord %>%
+  filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+  ggplot(aes(x = Argang, y = PrisPerLiter, color = Varugrupp)) + geom_point()
+    
+```
+
 
