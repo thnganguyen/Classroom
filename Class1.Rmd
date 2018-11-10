@@ -3,10 +3,11 @@ title: "Class1"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 library(tidyverse)
+library(tidyr)
 library(knitr)
-knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 ```
 
 ```{r}
@@ -63,7 +64,43 @@ Film %>%
 ```
 
 ```{r}
-FilmSO %>% 
-  ggplot(aes(x = eventDate, y = eventName_en)) + geom_point() 
+ggplot(FilmSO, aes(x = eventDate, y = eventName_en)) + geom_point() 
+```
+```{r, Olympic winter medals}
+winter_medals <- read.csv("Class_files/Winter_medals2018-09-26.csv")
+head(winter_medals)
+
+winter_medals <- winter_medals %>%
+  mutate(medals_per_mill = 1000000*Total/Population)
+
+winter_medals %>%
+  filter(Year == 2018) %>%
+  arrange(desc(medals_per_mill)) %>%
+  slice(1:10)
+
+medals_SNF <- winter_medals %>%
+  filter(Country %in% c("Sweden", "Norway", "Finland"))
+
+ggplot(medals_SNF, aes(x = Year, y = Total, shape = Country, color = Country)) + 
+  geom_point() + 
+  facet_wrap(~ Country)
+
+medals_Swe <- winter_medals %>%
+  filter(Country == "Sweden") %>%
+  select(Year, Gold, Silver, Bronze)
+total_medals_Swe <- gather(medals_Swe, Medals, value, -Year)
+ggplot(total_medals_Swe, aes(x = Year, y = value, color = Medals)) + 
+  geom_point() +
+  scale_color_manual(breaks = c("Gold", "Silver", "Bronze"), values=c("goldenrod3", "gold", "gray75")) +
+  ylab("Medals") 
+
+total_medals_SNF <- medals_SNF %>%
+  select(Country, Year, Gold, Silver, Bronze) %>%
+  gather(Medals, value, -Year, - Country)
+ggplot(total_medals_SNF, aes(x = Year, y = value, color = Medals)) + 
+  geom_point() +
+  scale_color_manual(breaks = c("Gold", "Silver", "Bronze"), values=c("goldenrod3", "gold", "gray75")) +
+  ylab("Medals") +
+  facet_wrap(~ Country)
 ```
 
