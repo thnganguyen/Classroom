@@ -2,6 +2,26 @@ Class2
 ================
 
 ``` r
+library(tidyverse)
+```
+
+    ## -- Attaching packages --------------------------------------- tidyverse 1.2.1 --
+
+    ## <U+221A> ggplot2 3.0.0     <U+221A> purrr   0.2.5
+    ## <U+221A> tibble  1.4.2     <U+221A> dplyr   0.7.6
+    ## <U+221A> tidyr   0.8.1     <U+221A> stringr 1.3.1
+    ## <U+221A> readr   1.1.1     <U+221A> forcats 0.3.0
+
+    ## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+    ## x dplyr::filter() masks stats::filter()
+    ## x dplyr::lag()    masks stats::lag()
+
+``` r
+library(ggplot2)
+library(chron)
+```
+
+``` r
 source("Class_files/SR_music.R")
 ```
 
@@ -88,15 +108,28 @@ ggplot(music_days, aes(x = duration)) + geom_histogram(bins = 100) + ggtitle("Th
 
 ``` r
 music_days <- music_days %>%
-  mutate(date = as.POSIXct(start_time) %>% format("%Y-%m-%d"))
+  mutate(time = as.numeric(chron::times(as.POSIXct(start_time) %>% format("%H:%M:%S"))))
 
 by_date <- music_days %>%
-  group_by(date) %>%
-  select(start_time, date)
+  select(time)
 
-ggplot(by_date, aes(x = start_time)) + geom_histogram() + ggtitle("The distribution the songs start_times")
+ggplot(by_date, aes(x = time)) + geom_histogram() + 
+  ggtitle("Distribution of start_time over the day")
 ```
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
 ![](Class2_files/figure-markdown_github/unnamed-chunk-2-2.png)
+
+``` r
+music_days <- music_days %>%
+  mutate(date = as.POSIXct(start_time) %>% format("%Y-%m-%d")) %>%
+  select(date, duration)
+music_days_hour <- music_days %>%
+  group_by(date) %>%
+  mutate(nHour = sum(as.numeric(duration))/3600)
+
+ggplot(music_days_hour, aes(x = date, y = nHour)) + geom_point() + coord_flip()
+```
+
+![](Class2_files/figure-markdown_github/unnamed-chunk-2-3.png)

@@ -3,10 +3,10 @@ title: "Class2"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 library(tidyverse)
 library(ggplot2)
-knitr::opts_chunk$set(echo = TRUE)
+library(chron)
 ```
 
 ```{r}
@@ -54,12 +54,21 @@ music_days <- music_days %>%
 ggplot(music_days, aes(x = duration)) + geom_histogram(bins = 100) + ggtitle("The distribution of song durations")
 
 music_days <- music_days %>%
-  mutate(date = as.POSIXct(start_time) %>% format("%Y-%m-%d"))
+  mutate(time = as.numeric(chron::times(as.POSIXct(start_time) %>% format("%H:%M:%S"))))
 
 by_date <- music_days %>%
-  group_by(date) %>%
-  select(start_time, date)
+  select(time)
 
-ggplot(by_date, aes(x = start_time)) + geom_histogram() + ggtitle("The distribution the songs start_times")
+ggplot(by_date, aes(x = time)) + geom_histogram() + 
+  ggtitle("Distribution of start_time over the day")
+
+music_days <- music_days %>%
+  mutate(date = as.POSIXct(start_time) %>% format("%Y-%m-%d")) %>%
+  select(date, duration)
+music_days_hour <- music_days %>%
+  group_by(date) %>%
+  mutate(nHour = sum(as.numeric(duration))/3600)
+
+ggplot(music_days_hour, aes(x = date, y = nHour)) + geom_point() + coord_flip()
 ```
 
