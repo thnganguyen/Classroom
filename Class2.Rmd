@@ -9,7 +9,7 @@ library(ggplot2)
 library(chron)
 ```
 
-```{r}
+```{r, SR songs}
 source("Class_files/SR_music.R")
 
 music_day <- get_SR_music(channel = 164, date = "2017-12-31") %>%
@@ -71,4 +71,37 @@ music_days_hour <- music_days %>%
 
 ggplot(music_days_hour, aes(x = date, y = nHour)) + geom_point() + coord_flip()
 ```
+
+```{r, Insurance claims from kammarkollegiet}
+claim_data <- read.csv("Class_files/claims.csv")
+
+claim_by_year <- claim_data %>%
+  mutate(year = as.numeric(as.POSIXct(Claim.date) %>% format("%Y")))
+
+ggplot(claim_by_year, aes(x = year)) + geom_bar()
+
+claim_by_year %>% 
+  filter(year>=2010) %>%
+  mutate(closing.year = as.numeric(as.POSIXct(Closing.date) %>% format("%Y"))) %>%
+  mutate(duration = (closing.year - year)) %>%
+  group_by(duration, year) %>%
+  summarize(loss = sum(Payment)) %>%
+  filter(!is.na(duration)) %>%
+  xtabs(formula=loss~year+duration)
+```
+
+```{r, Election 2018}
+parties_2018 <- read_csv2("https://data.val.se/val/val2018/valsedlar/partier/deltagande_partier.skv", locale = locale("sv", encoding = "ISO-8859-1"))
+
+parties_2018 %>%
+  group_by(VALTYP) %>%
+  summarize(n = n_distinct(PARTIKOD))
+
+parties_2018 %>%
+  filter(VALTYP == "K") %>%
+  group_by(VALKRETSKOD) %>%
+  summarize(n = n_distinct(PARTIKOD))
+```
+
+
 
