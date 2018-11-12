@@ -1,0 +1,58 @@
+---
+title: "Class3"
+output: github_document
+---
+
+```{r setup}
+library(ggplot2)
+library(tidyverse)
+library(knitr)
+```
+
+## Systembolaget’s assortment
+```{r, Systembolaget’s assortment}
+Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
+#str(Sortiment_hela)
+
+mydata <- Sortiment_hela %>%
+  filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2011:2018))
+
+ggplot(mydata, aes(x = Argang)) + geom_bar()
+ggplot(mydata, aes(x = Argang)) + geom_bar() + facet_wrap(~ Varugrupp, scale = "free_y")
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar()
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "dodge")
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "fill")
+
+mydata %>%
+  filter(Varugrupp == "Rött vin") %>%
+  ggplot(aes(x = as.factor(Argang), y = PrisPerLiter)) + geom_boxplot() + ggtitle("Red wines")
+
+ggplot(mydata, aes(x = as.factor(Varugrupp), y = PrisPerLiter)) + geom_boxplot() + 
+  scale_y_log10() + coord_flip()
+```
+
+## Winter medals
+```{r, Winter medals}
+medal_long <- read_csv("Class_files/Winter_medals2018-09-26.csv") %>% 
+  select(-Total) %>% 
+  gather(Denomination, Number, c("Gold", "Silver", "Bronze"))
+glimpse(medal_long)
+
+medal_long %>%
+  group_by(Denomination, Country) %>%
+  summarize(Number.Denomination = sum(Number)) %>%
+  ggplot(aes(x = as.factor(Country), y = Number.Denomination, fill = Denomination)) + 
+  geom_bar(stat = "identity", position = "fill") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+## First math course
+```{r, First math course}
+Course_result <- read_csv("Class_files/MM2001_results.csv")
+
+ggplot(Course_result, aes(x = Age, fill = Sex)) + geom_bar(position = "fill")
+ggplot(Course_result, aes(x = Age, fill = Grade)) + geom_bar(position = "fill")
+ggplot(Course_result, aes(x = Sex, fill = Grade)) + geom_bar(position = "fill")
+ggplot(Course_result, aes(x = Grade, fill = Sex)) + geom_bar(position = "fill")
+```
+
