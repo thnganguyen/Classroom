@@ -5,20 +5,22 @@ Class2
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ------------------------------------------------- tidyverse 1.2.1 --
+    ## ── Attaching packages ───────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
-    ## <U+221A> ggplot2 3.0.0     <U+221A> purrr   0.2.5
-    ## <U+221A> tibble  1.4.2     <U+221A> dplyr   0.7.6
-    ## <U+221A> tidyr   0.8.1     <U+221A> stringr 1.3.1
-    ## <U+221A> readr   1.1.1     <U+221A> forcats 0.3.0
+    ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+    ## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
+    ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
+    ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## -- Conflicts ---------------------------------------------------- tidyverse_conflicts() --
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
+    ## ── Conflicts ──────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
+#library(tidyr)
 library(ggplot2)
 library(chron)
+library(knitr)
 ```
 
 ``` r
@@ -146,34 +148,235 @@ ggplot(claim_by_year, aes(x = year)) + geom_bar()
 ![](Class2_files/figure-markdown_github/Insurance%20claims%20from%20kammarkollegiet-1.png)
 
 ``` r
-claim_by_year %>% 
+mytab <- claim_by_year %>% 
   filter(year>=2010) %>%
   mutate(closing.year = as.numeric(as.POSIXct(Closing.date) %>% format("%Y"))) %>%
   mutate(duration = (closing.year - year)) %>%
   group_by(duration, year) %>%
   summarize(loss = sum(Payment)) %>%
   filter(!is.na(duration)) %>%
-  xtabs(formula=loss~year+duration)
+  spread(duration, loss)
+
+kable(mytab, format = "html")
 ```
 
-    ##       duration
-    ## year           0         1         2         3         4         5
-    ##   2010  510018.0 3088112.5 4647157.5 1822603.5 2137421.0  758912.5
-    ##   2011  551435.2 2058350.0 2400339.0 1667243.5 1247299.0  814415.0
-    ##   2012  234650.0 1699957.0 4118429.0 2362584.0 1290159.0       0.0
-    ##   2013  440172.0 2090456.0 2527246.0 2243057.0  548920.0       0.0
-    ##   2014  294981.0 2150932.0 4212814.0  299683.0       0.0       0.0
-    ##   2015  407139.0 3313439.0  468328.0       0.0       0.0       0.0
-    ##   2016  437061.0   31259.0       0.0       0.0       0.0       0.0
-    ##       duration
-    ## year           6
-    ##   2010  821161.0
-    ##   2011   11900.0
-    ##   2012       0.0
-    ##   2013       0.0
-    ##   2014       0.0
-    ##   2015       0.0
-    ##   2016       0.0
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+year
+</th>
+<th style="text-align:right;">
+0
+</th>
+<th style="text-align:right;">
+1
+</th>
+<th style="text-align:right;">
+2
+</th>
+<th style="text-align:right;">
+3
+</th>
+<th style="text-align:right;">
+4
+</th>
+<th style="text-align:right;">
+5
+</th>
+<th style="text-align:right;">
+6
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2010
+</td>
+<td style="text-align:right;">
+510018.0
+</td>
+<td style="text-align:right;">
+3088112
+</td>
+<td style="text-align:right;">
+4647158
+</td>
+<td style="text-align:right;">
+1822604
+</td>
+<td style="text-align:right;">
+2137421
+</td>
+<td style="text-align:right;">
+758912.5
+</td>
+<td style="text-align:right;">
+821161
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2011
+</td>
+<td style="text-align:right;">
+551435.2
+</td>
+<td style="text-align:right;">
+2058350
+</td>
+<td style="text-align:right;">
+2400339
+</td>
+<td style="text-align:right;">
+1667244
+</td>
+<td style="text-align:right;">
+1247299
+</td>
+<td style="text-align:right;">
+814415.0
+</td>
+<td style="text-align:right;">
+11900
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2012
+</td>
+<td style="text-align:right;">
+234650.0
+</td>
+<td style="text-align:right;">
+1699957
+</td>
+<td style="text-align:right;">
+4118429
+</td>
+<td style="text-align:right;">
+2362584
+</td>
+<td style="text-align:right;">
+1290159
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2013
+</td>
+<td style="text-align:right;">
+440172.0
+</td>
+<td style="text-align:right;">
+2090456
+</td>
+<td style="text-align:right;">
+2527246
+</td>
+<td style="text-align:right;">
+2243057
+</td>
+<td style="text-align:right;">
+548920
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2014
+</td>
+<td style="text-align:right;">
+294981.0
+</td>
+<td style="text-align:right;">
+2150932
+</td>
+<td style="text-align:right;">
+4212814
+</td>
+<td style="text-align:right;">
+299683
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2015
+</td>
+<td style="text-align:right;">
+407139.0
+</td>
+<td style="text-align:right;">
+3313439
+</td>
+<td style="text-align:right;">
+468328
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2016
+</td>
+<td style="text-align:right;">
+437061.0
+</td>
+<td style="text-align:right;">
+31259
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+``` r
+options(knitr.kable.NA = '')
+```
 
 ``` r
 parties_2018 <- read_csv2("https://data.val.se/val/val2018/valsedlar/partier/deltagande_partier.skv", locale = locale("sv", encoding = "ISO-8859-1"))
@@ -184,20 +387,20 @@ parties_2018 <- read_csv2("https://data.val.se/val/val2018/valsedlar/partier/del
     ## Parsed with column specification:
     ## cols(
     ##   VALTYP = col_character(),
-    ##   `VALOMR<U+00C5>DESKOD` = col_character(),
-    ##   `VALOMR<U+00C5>DESNAMN` = col_character(),
+    ##   VALOMRÅDESKOD = col_character(),
+    ##   VALOMRÅDESNAMN = col_character(),
     ##   VALKRETSKOD = col_integer(),
     ##   VALKRETSNAMN = col_character(),
-    ##   `L<U+00C4>NSKOD` = col_character(),
-    ##   `L<U+00C4>NSNAMN` = col_character(),
+    ##   LÄNSKOD = col_character(),
+    ##   LÄNSNAMN = col_character(),
     ##   PARTIBETECKNING = col_character(),
-    ##   `PARTIF<U+00D6>RKORTNING` = col_character(),
+    ##   PARTIFÖRKORTNING = col_character(),
     ##   PARTIKOD = col_integer(),
-    ##   `ANM<U+00C4>LNINGSDATUM` = col_date(format = ""),
+    ##   ANMÄLNINGSDATUM = col_date(format = ""),
     ##   REGISTRERINGSDATUM = col_date(format = ""),
     ##   DIARIENUMMER = col_character(),
     ##   REGISTRERADPARTIBETECKNING = col_character(),
-    ##   `ANM<U+00C4>LDAKANDIDATER` = col_character(),
+    ##   ANMÄLDAKANDIDATER = col_character(),
     ##   SYMBOL = col_character(),
     ##   DELTAGANDEGRUND = col_character()
     ## )
@@ -221,13 +424,6 @@ parties_2018 %>%
   group_by(VALKRETSKOD) %>%
   summarize(n = n_distinct(PARTIKOD))
 ```
-
-    ## Warning: Mangling the following names: VALOMR<U+00C5>DESKOD ->
-    ## VALOMR<U+00C5>DESKOD, VALOMR<U+00C5>DESNAMN -> VALOMR<U+00C5>DESNAMN,
-    ## L<U+00C4>NSKOD -> L<U+00C4>NSKOD, L<U+00C4>NSNAMN -> L<U+00C4>NSNAMN,
-    ## PARTIF<U+00D6>RKORTNING -> PARTIF<U+00D6>RKORTNING, ANM<U+00C4>LNINGSDATUM
-    ## -> ANM<U+00C4>LNINGSDATUM, ANM<U+00C4>LDAKANDIDATER ->
-    ## ANM<U+00C4>LDAKANDIDATER. Use enc2native() to avoid the warning.
 
     ## # A tibble: 7 x 2
     ##   VALKRETSKOD     n

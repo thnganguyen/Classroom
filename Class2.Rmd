@@ -5,8 +5,10 @@ output: github_document
 
 ```{r setup}
 library(tidyverse)
+#library(tidyr)
 library(ggplot2)
 library(chron)
+library(knitr)
 ```
 
 ```{r, SR songs}
@@ -80,14 +82,17 @@ claim_by_year <- claim_data %>%
 
 ggplot(claim_by_year, aes(x = year)) + geom_bar()
 
-claim_by_year %>% 
+mytab <- claim_by_year %>% 
   filter(year>=2010) %>%
   mutate(closing.year = as.numeric(as.POSIXct(Closing.date) %>% format("%Y"))) %>%
   mutate(duration = (closing.year - year)) %>%
   group_by(duration, year) %>%
   summarize(loss = sum(Payment)) %>%
   filter(!is.na(duration)) %>%
-  xtabs(formula=loss~year+duration)
+  spread(duration, loss)
+
+kable(mytab, format = "html")
+options(knitr.kable.NA = '')
 ```
 
 ```{r, Election 2018}
