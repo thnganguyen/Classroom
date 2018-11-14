@@ -6,19 +6,20 @@ library(ggplot2)
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ tibble  1.4.2     ✔ purrr   0.2.5
     ## ✔ tidyr   0.8.1     ✔ dplyr   0.7.6
     ## ✔ readr   1.1.1     ✔ stringr 1.3.1
     ## ✔ tibble  1.4.2     ✔ forcats 0.3.0
 
-    ## ── Conflicts ───────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ───────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
 library(knitr)
+library(readr)
 ```
 
 Systembolaget’s assortment
