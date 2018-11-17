@@ -1,0 +1,61 @@
+---
+title: "Class4"
+output: github_document
+---
+
+```{r setup}
+library(tidyverse)
+library(ggplot2)
+```
+
+The difference between read.csv and read_csv: in read.csv string is converted into factor (stringAsFactor = TRUE by defaut) which decreases the dimension of data. To convert factor to numeric it is necessary to convert it into character first then to numeric. For example as.factor(c("1", "2", "5")) %>% as.character() %>% as.numeric()
+
+```{r}
+dental_data <- read_csv2("Class_files/Statistikdatabasen_2018-01-23 14_46_26.csv", 
+                         skip = 1, n_max = 580)
+## skip = 1: skip the first line
+## n_max = 580: the maximum number of the table to read
+dental_data %>%
+  gather(key = Year, value = Number, -Region, -Kön) %>%
+  mutate(Year = as.numeric(Year)) %>%
+  glimpse()
+
+data <- read_csv2("Class_files/Statistikdatabasen_2018-01-23 15_04_12.csv", skip = 1, n_max = 80, na = " ")
+names(data) <- gsub(" ", "_", names(data))
+glimpse(data)
+
+data %>%
+  mutate(Gotlands_län = str_replace_all(Gotlands_län, string = "0", pattern = " ")) %>% 
+  mutate(Gotlands_län = as.integer(Gotlands_län)) %>%
+  gather(key = County, value = Death_number, -År, -Diagnos, -Kön) %>%
+  select(År, Death_number) %>%
+  ggplot(aes(x = År, y = Death_number/sum(Death_number))) + geom_col() +
+  ggtitle("The proportion of suicides among death totals, by year, for the whole country")
+
+headers <- names(read_csv2("Class_files/Statistikdatabasen_2018-01-23 15_39_06.csv", skip = 1, n_max = 1))
+df <- read_csv2("Class_files/Statistikdatabasen_2018-01-23 15_39_06.csv", skip = 2, n_max = 42)
+glimpse(df)
+names(df) <- paste(headers, names(df), sep = "_")
+
+df_clean <- df %>%
+  gather(key = Time, value = Number, -X1_Region, -X2_Mått) %>%
+  spread(key = X2_Mått, value = Number)
+names(df_clean) <- gsub(" ", "_", names(df_clean))
+glimpse(df_clean)
+df_clean %>%
+  separate(Time, c("Year", "n", "Month")) %>%
+  select(X1_Region, Year, Month, Antal_hushåll, Utbetalt_ekonomiskt_bistånd_tkr) %>%
+  mutate(Antal_hushåll = as.numeric(Antal_hushåll), 
+         Utbetalt_ekonomiskt_bistånd_tkr = as.numeric(Utbetalt_ekonomiskt_bistånd_tkr)) %>%
+  mutate(average = Utbetalt_ekonomiskt_bistånd_tkr/Antal_hushåll)
+
+math_data <- read_csv("Class_files/MM2001.csv", n_max = 1)
+glimpse(math_data)
+
+math_data <- tibble::rowid_to_column(math_data, "ID")
+
+math_data %>%
+  gather(key, value, 11:108) %>%
+  str()
+```
+
