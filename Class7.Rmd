@@ -1,0 +1,80 @@
+---
+title: "Class7"
+output: github_document
+---
+
+```{r setup}
+library(tidyverse)
+```
+1. Find the similar obsevations:
+Glyphs:: stars(): visualize
+        DescTools:PlotFaces()
+        HeatMap: apply for more dimensions and more observations than 2 aboves
+Covariation: GGally::scatmat()
+             Lines
+             corrplot::corrplot: correlation plot
+
+### Election 2018
+```{r}
+election_data <- read_csv2("Class_files/2018_R_per_kommun.csv")
+glimpse(election_data)
+names(election_data) <- gsub(" ", "_", names(election_data))
+names(election_data) <- gsub("-", "_", names(election_data))
+
+X <- scale(election_data[ , 5:12])
+head(X)
+pc.X <- princomp(X)
+biplot(pc.X)
+# KD closes to SD and V distant to SD
+X %>%
+  dist() %>%
+  hclust() %>%
+  plot(labels = round(X[, 6]), hang = -1) # label by MP
+X %>%
+  t() %>%
+  dist() %>%
+  hclust() %>%
+  plot(hang = -1)
+
+municipalities <- read_csv2("Class_files/Kommungruppsindelning_2017.csv")
+names(municipalities) <- gsub(" ", "_", names(municipalities))
+names(municipalities) <- gsub("/", "_", names(municipalities))
+glimpse(municipalities)
+
+u <- svd(X)$u
+
+election_data %>%
+  mutate(KOD = paste(formatC(LÄNSKOD, width = 2, flag = "0"), 
+                     formatC(KOMMUNKOD, width = 2, flag = "0"), sep = "")) %>%
+  left_join(municipalities, by = c("KOD" = "Kommunkod")) %>%
+  mutate(U1 = u[, 1], U2 = u[, 2]) %>%
+  ggplot(aes(x = U1, y = U2, color = Grupp)) + geom_point()
+```
+There seems to be a relation between voting patterns and classification, Grupp A2 seems distributing in the left hand side of the plot while A1 is up, B3 is left and up B4 is from center to bottom, C8 is in the right ...
+
+### 6 graders
+```{r}
+avg_grade <- read_csv("Class_files/betyg.csv")
+names(avg_grade) <- gsub(" ", "_", names(avg_grade))
+glimpse(avg_grade)
+summary(avg_grade)
+
+X = scale(avg_grade[, -c(1:2)])
+biplot(princomp(X))
+X %>%
+  dist() %>%
+  hclust() %>%
+  plot(labels = round(avg_grade$matematik/5), hang = -1) 
+X %>%
+  t() %>%
+  dist() %>%
+  hclust() %>%
+  plot(hang = -1)
+
+u <- svd(X)$u
+avg_grade %>%
+  left_join(municipalities, by = c("kod" = "Kommunkod")) %>%
+  mutate(U1 = u[, 1], U2 = u[, 2]) %>%
+  ggplot(aes(x = U1, y = U2, color = Grupp)) + geom_point()
+```
+
