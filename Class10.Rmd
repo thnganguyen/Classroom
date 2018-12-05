@@ -1,0 +1,85 @@
+---
+title: "Class10"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(rvest)
+library(stringr)
+library(stringi)
+```
+
+# Bokus top sellers
+
+```{r}
+html_book <- read_html("https://www.bokus.com/topplistor/pockettoppen")
+html_book %>%
+  html_nodes(".pricing__price, .ProductList__authors a, .Item__title--large a") %>%
+  html_text() %>%
+  str_remove_all("[ ]\n[ ]+Pocket\n[ ]+")
+html_book %>%
+  html_nodes(".u-vertical--top") %>%
+  html_attr("data-rating")
+```
+
+# SHL players
+
+```{r}
+html_rl <- read_html("https://www.shl.se/lag/087a-087aTQv9u__frolunda-hc/qQ9-a5b4QRqdS__ryan-lasch")
+
+info <- html_text(html_nodes(html_rl, ".rmss_c-squad__player-header-info-items-item-value"))
+head <- html_text(html_nodes(html_rl, ".rmss_c-squad__player-header-info-items-item-name"))
+rbind(head, info)
+
+html_statistic <- read_html("https://www.shl.se/lag/087a-087aTQv9u__frolunda-hc/qQ9-a5b4QRqdS__ryan-lasch/statistics")
+html_statistic %>%
+  html_table() %>% .[[1]]
+
+html_team <- read_html("https://www.shl.se/lag/2459-2459QTs1f__djurgarden-hockey/roster")
+firstName <- html_team %>% 
+  html_nodes(".rmss_c-squad__team-cont-roster-group-item-info") %>% 
+  html_text() %>%
+  str_extract_all("[A-ZÄÅÖ][a-zäåö]+") %>%
+  unlist()
+lastName <- html_team %>% 
+  html_nodes(".rmss_c-squad__team-cont-roster-group-item-info") %>% 
+  html_text() %>%
+  str_remove("[A-ZÄÅÖ][a-zäåö]+") %>%
+  str_extract_all("\\D+") %>%
+  unlist()
+Number <- html_team %>% 
+  html_nodes(".rmss_c-squad__team-cont-roster-group-item-info") %>% 
+  html_text() %>%
+  str_extract_all("\\d+") %>%
+  unlist()
+team <- data.frame(First_Name = firstName[1:28], Last_Name = lastName[1:28], Number = Number)
+team
+```
+
+# TV listings
+
+```{r}
+html_tv <- read_html("https://www.tv.nu/kanal/svt1/2018-12-05")
+channel_id <- html_tv %>%
+  html_nodes(".box--emphasize") %>%
+  html_attr("data-channel-id")
+title <- html_tv %>%
+  html_nodes(".box--emphasize") %>%
+  html_attr("data-title")
+start_time <- html_tv %>%
+  html_nodes(".box--emphasize") %>%
+  html_attr("data-start-time")
+```
+
+# SVT news
+
+```{r}
+html_svt <- read_html("https://www.svt.se/")
+html_svt %>%
+  html_nodes(".nyh_teaser__heading-title") %>%
+  html_text()
+
+```
+
