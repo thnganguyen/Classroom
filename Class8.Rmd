@@ -1,0 +1,69 @@
+---
+title: "Class8"
+output: github_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(stringr)
+```
+
+# A csv-reader
+Don't get the same dimension with using read_csv
+```{r}
+tab <- readLines(con <- file("Class_files/mot-2014-2017.csv", encoding = "UTF-8"))
+close(con)
+my_tab <- tab %>% 
+  str_split(pattern = fixed(","), simplify = TRUE)
+
+dim(my_tab)
+my_tab[1, ]
+
+tab1 <- read_csv("Class_files/mot-2014-2017.csv")
+glimpse(tab1)
+```
+
+# HTML tables
+Extract table into vector using regex
+```{r}
+table <- "<table>
+  <tr>
+<th>Förnamn</th>
+<th>Efternamn</th> 
+<th>Ålder</th>
+</tr>
+<tr>
+<td>Kalle</td>
+<td>Karlsson</td> 
+<td>25</td>
+</tr>
+<tr>
+<td>Lisa</td>
+<td>Larsson</td> 
+<td>17</td>
+</tr>
+</table>"
+
+pattern1 <- regex("\\\n?\\<.*?\\>\\\n?", multiline = TRUE, dotall = TRUE)
+table %>%
+  str_replace_all(pattern1, " ") %>%
+  str_squish() %>%
+  str_split(" ", simplify = TRUE)
+
+pattern <- regex("\\>[\\w\\d]+\\<", multiline = TRUE)
+table %>%
+  str_extract_all(pattern, simplify = TRUE) %>%
+   str_remove_all("[><]")
+```
+
+# Motions of the Riksdag
+```{r}
+motions <- read_csv("Class_files/mot-2014-2017.csv", 
+                    col_names = c("hangar_id", "dok_id", "rm", "beteckning", 
+                                  "typ", "subtyp", "doktyp", "dokumentnamn",  "organ", 
+                                  "mottagare", "nummer", "datum", "systemdatum", 
+                                  "titel", "subtitel", "status"))
+glimpse(motions)
+```
+
