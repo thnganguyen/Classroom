@@ -1,0 +1,102 @@
+---
+title: "Class6"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(DBI)
+library(RSQLite)
+```
+
+Sort weekdate
+order_day <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+mutate(Weekday = weekdays(Date)) %>% mutate(Weekday = factor(Weekday, order_day))
+```{r}
+weekdays(Sys.Date())
+```
+
+# SL SQL
+Connect to the database, list the tables and figure out how they relate to eachother.
+
+```{r}
+con <- dbConnect(SQLite(), "Class_files/sthlm_metro.sqlite")
+tables <- dbListTables(con)
+#lapply(tables, dbReadTable, conn = con)
+```
+
+Query for the LineName from table Line where LineNumber is 18.
+
+```{r}
+dbGetQuery(con, "SELECT StationName, count(PlatformNumber) AS Number 
+           FROM Platform GROUP BY StationName ORDER BY Number DESC")
+```
+
+Query for the five most southern StationName, where position is measured as the average Latitude of its PlatformNumber.
+
+```{r}
+dbGetQuery(con, "SELECT StationName, avg(Latitude) AS avg_Latitude FROM Platform 
+           GROUP BY StationName ORDER BY avg_Latitude DESC LIMIT 5")
+```
+
+Query for the number of stations on LineNumber 18.
+
+```{r}
+dbGetQuery(con, "SELECT LineNumber, count(DISTINCT StationName) AS Number
+           FROM LinePlatform LEFT JOIN Platform 
+           ON LinePlatform.PlatformNumber = Platform.PlatformNumber
+           WHERE LineNumber = 18")
+```
+
+Query for all StationName on LineNumber 18 in alphabetical order.
+
+```{r}
+dbGetQuery(con, "SELECT DISTINCT StationName FROM LinePlatform LEFT JOIN Platform 
+           ON LinePlatform.PlatformNumber = Platform.PlatformNumber
+           WHERE LineNumber = 18")
+dbDisconnect(con)
+```
+
+
+# Pokemon SQL
+
+```{r}
+con <- dbConnect(SQLite(), "Class_files/pokemon.sqlite")
+tables <- dbListTables(con)
+lapply(tables, dbReadTable, conn = con)
+```
+
+Query for the average height and average weight of pokemon (pokemon table).
+
+```{r}
+dbGetQuery(con, "SELECT avg(height) AS avg_height, avg(weight) AS avg_weight
+           FROM pokemon")
+```
+
+Query for the number of pokemon of less than average weight.
+
+```{r}
+dbGetQuery(con, "SELECT COUNT(*) AS number
+            FROM pokemon
+            WHERE weight < (SELECT avg(weight) FROM pokemon)")
+```
+
+Query for the average weight of ghost-type pokemon.
+
+```{r}
+dbGetQuery(con, "SELECT avg(pokemon.weight) AS avg_weight
+           FROM pokemon 
+           LEFT JOIN pokemon_types ON pokemon.id = pokemon_types.pokemon_id
+           LEFT JOIN types ON pokemon_types.type_id = types.id
+           WHERE types.identifier = 'ghost'")
+```
+
+
+
+```{r}
+dbDisconnect(con)
+```
+
+
+
+
