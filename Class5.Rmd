@@ -1,0 +1,95 @@
+---
+title: 'Class 5: Relational data and dplyr joins'
+output: github_document
+---
+Thi Thuy Nga Nguyen
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+```
+
+# More dental care
+During last class you worked with records of adults visiting dental care, join this with Class_files/BE0101A5.csv, containing population numbers, and compute number of visits per capita.
+
+```{r}
+dental_data <- read_csv2("Class_files/Statistikdatabasen_2018-01-23 14_46_26.csv", skip = 1, n_max = 580)
+population <- read_csv2("Class_files/BE0101A5.csv", ";")
+```
+
+## haven't completed
+
+# Systembolaget
+Construct A data-frame of beverages that have been added since 2018-10-08 (i.e. beverages in the new file that are not present in  Class_files/systembolaget2018-10-08.csv).
+
+A data-frame of beverages that have been removed since 2018-10-08.
+
+Any particular types of beverages that has been added/removed?
+
+```{r}
+source("Class_files/Systembolaget.R")
+
+systembolaget_old <- read_csv("Class_files/systembolaget2018-10-08.csv")
+glimpse(systembolaget_old)
+systembolaget_new <- read_csv("systembolaget2018-11-19.csv")
+glimpse(systembolaget_new)
+
+setdiff(systembolaget_new, systembolaget_old)
+setdiff(systembolaget_old, systembolaget_new)
+
+systembolaget_new %>%
+  anti_join(systembolaget_old) %>%
+  select(Typ) %>%
+  unique()
+
+systembolaget_old %>%
+  anti_join(systembolaget_new) %>%
+  select(Typ) %>%
+  unique()
+```
+
+# Pokemon
+We can e.g. see that Pokemon no 1 (bulbasaur) is of type 12 (grass) and type 4 (poison). Join the tables, aiming for a full table like poke_table below and investigate how height or weight depends on type.
+
+```{r}
+pokemon <- read_csv("https://raw.githubusercontent.com/veekun/pokedex/master/pokedex/data/csv/pokemon.csv")
+head(pokemon)
+types <- read_csv("https://raw.githubusercontent.com/veekun/pokedex/master/pokedex/data/csv/types.csv")
+head(types)
+pokemon_types <- read_csv("https://raw.githubusercontent.com/veekun/pokedex/master/pokedex/data/csv/pokemon_types.csv")
+head(pokemon_types)
+
+pokemon_table <- pokemon %>%
+  left_join(pokemon_types, by = c("id" = "pokemon_id")) %>%
+  left_join(types, by = c("type_id" = "id")) %>%
+  select(id, identifier.x, slot, identifier.y, height, weight) %>%
+  spread(key = slot, value = identifier.y)
+names(pokemon_table) <- c("id", "identifier", "height", "weight", "slot1", "slot2")
+head(pokemon_table)
+
+ggplot(pokemon_table, aes(x = slot1, y = height)) + geom_col() + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  ggtitle("Height by types 1")
+ggplot(pokemon_table, aes(x = slot1, y = weight)) + geom_col() + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  ggtitle("Weight by types 1")
+ggplot(data = subset(pokemon_table, !is.na(slot2)), aes(x = slot2, y = height)) + geom_col() + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  ggtitle("Height by types 2")  
+ggplot(data = subset(pokemon_table, !is.na(slot2)), aes(x = slot2, y = weight)) + geom_col() + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  ggtitle("Weight by types 2")
+```
+
+
+# More birdwatching
+Do birdwatchers stay home when it is raining? The file Class_files/smhi-opendata_5_98210_20181112_125314.csv contains daily precipitation from SMHI. Join this with the species_data from HW2 in order to investigate whether the observers are less active during rainy days. Note that there are strong unrelated seasonal components in both data sets. For example, both rainfall and recording activity tends to be low in summer months.
+
+```{r}
+species_data <- read_csv("SpeciesObservations-2018-11-07-14-23-54.csv")
+names(species_data) <- gsub(" ", "_", names(species_data))
+precipitation_data <- read_csv2("Class_files/smhi-opendata_5_98210_20181112_125314.csv")
+```
+
+## haven't completed
+
