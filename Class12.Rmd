@@ -1,0 +1,177 @@
+---
+title: "Class12"
+output: github_document
+---
+Thi Thuy Nga Nguyen
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(purrr)
+library(httr)
+library(rvest)
+library(stringi)
+library(stringr)
+```
+
+# Solve exercises in R4DS chapter 21.5.3
+Write code that uses one of the map functions to: Compute the mean of every column in mtcars.
+
+```{r}
+map_dbl(mtcars, mean, na.rm = TRUE)
+```
+
+Determine the type of each column in nycflights13::flights.
+
+```{r}
+map_chr(nycflights13::flights, typeof)
+```
+
+Compute the number of unique values in each column of iris.
+
+```{r}
+iris %>%
+  map(unique) %>%
+  map_dbl(length)
+```
+
+Generate 10 random normals for each of $\mu$ = -10, 0, 10, 100
+
+```{r}
+map(c(-10, 0, 10, 100), rnorm, n = 10)
+```
+
+How can you create a single vector that for each column in a data frame indicates whether or not it’s a factor?
+
+```{r}
+map_lgl(iris, is.factor)
+
+map(1:5, runif)  # 1:5 -> n
+
+map(-2:2, rnorm, n = 5)  # -2:2 -> mean
+```
+
+Eliminate the anonymous function
+
+```{r}
+mtcars %>% 
+  split(.$cyl) %>% 
+  map(function(df) lm(mpg ~ wt, data = df))
+mtcars %>% 
+  split(.$cyl) %>%
+  map(~lm(mpg ~ wt, data = .))
+```
+
+# A likelihood function
+
+```{r}
+L_exp <- function(x, lambda) prod(dexp(x, lambda))
+set.seed(1)
+x <- rexp(100, 1)
+L_exp(x, 1)
+lambda <- seq(0.5, 2, length.out = 10)
+L_exp(x, lambda)
+```
+
+Use map_dbl to compute the vector $(L(\lambda_1),…,L(\lambda_{10}))$
+
+```{r}
+map_dbl(lambda, L_exp, x = x)
+```
+
+
+# More dramatic
+Modify the function repertoir from day 12 (Class11) such that it generates a suitable result if the API call fails (e.g. due to an empty repertoir). Use it in combination with e.g. map_df in order to create a table of all sets from 1908-2017. Who is the most active director?
+
+```{r}
+repertoire <- function(year){
+  html <- read_html(paste0("https://www.dramaten.se/medverkande/rollboken/?category=date&query=", year))
+  get_column <- function(css) {
+    html %>%
+      html_nodes(css) %>%
+      html_text()
+  }
+  df <- data.frame(Play = get_column(".play-name")[-1], 
+                   Opening_night = get_column(".first-appearance")[-1],
+                   Director = get_column(".director")[-1], Stage = get_column(".stage")[-1])
+  df$Director <- df$Director %>%
+    str_extract_all("[A-ZÄÅÖ][a-ö-A-Ö]+ [A-ZÄÅÖ][a-ö-A-Ö]+") %>%
+    lapply(function(x) if(identical(x,character(0))) "" else x) %>%
+    unlist()
+  df <- df %>%
+    mutate(Play = as.character(Play), Opening_night = as.POSIXct(Opening_night), Stage = as.character(Stage))
+  return(df)
+}
+
+safe_repertoire <- safely(repertoire)
+years <- 1908:2017
+data <- map(years, safe_repertoire)
+dfs <- transpose(data)[["result"]]
+errs <- transpose(data)[["error"]]
+is_ok <- map_lgl(errs, is.null)
+years[!is_ok]
+dramatic <- map_dfr(dfs[is_ok], as.data.frame)
+
+dramatic %>%
+  group_by(Director) %>%
+  summarize(number = n()) %>%
+  arrange(desc(number)) %>%
+  filter(Director != "") %>%
+  head(n = 1)
+
+dramatic %>%
+  mutate(Year = format(Opening_night, "%Y")) %>%
+  filter(Year %in% years[!is_ok])
+```
+
+
+# More SHL-players
+
+```{r}
+get_player <- function(url){
+  if (GET(paste0(url, "/statistics"))$status_code != 200) {
+    stop("error in GET url")
+  } else {
+    response <- GET(paste0(url, "/statistics"))
+  }
+  player_xml <- content(response, "text") %>% 
+    read_html(player_page)
+  css <- list(".rmss_c-squad__player-header-name-h", # Namn
+              ".rmss_c-squad__player-header-name-info-position", #Position
+              ".rmss_c-squad__player-header-info-items-item-value") # Info
+  map(css, html_nodes, x = player_xml) %>% 
+    map(html_text) %>% 
+    unlist() %>% 
+    .[1:8] %>%
+    set_names(c("Namn", "Position", "Födelsedatum", "Ålder", "Nationalitet", "Längd", "Vikt", "Skjuter")) %>%
+    data.frame() %>%
+    t() %>%
+    data.frame() %>%
+    mutate(Namn = as.character(Namn), Position = as.character(Position), 
+           Födelsedatum = as.POSIXct(Födelsedatum), Ålder = as.numeric(Ålder),
+           Nationalitet = as.character(Nationalitet), Skjuter = as.character(Skjuter))
+}
+get_player("http://www.shl.se/lag/087a-087aTQv9u__frolunda-hc/qQ9-a5b4QRqdS__ryan-lasch")
+```
+
+Construct a new function get_team, that given an url of the form "http://www.shl.se/lag/2459-2459QTs1f__djurgarden-hockey/roster" generates a  data.frame of players and informations from get_player.
+
+```{r}
+get_team <- function(url) {
+  response <- GET(url)
+  if (response$status_code != 200) {
+    stop("link is not valid!!")
+  }
+  player_url <- content(response, "text") %>% 
+    read_html() %>%
+    html_nodes(".rmss_c-squad__team-cont-roster-group-item a") %>%
+    html_attr("href") %>%
+    map_chr(function(x) paste0("http://www.shl.se", x))
+  map_dfr(player_url, get_player)
+}
+get_team("http://www.shl.se/lag/2459-2459QTs1f__djurgarden-hockey/roster") %>% 
+  head()
+```
+
+
+
