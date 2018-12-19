@@ -1,7 +1,8 @@
 ---
-title: "Class1"
+title: "Class 2: Tidyverse: Basic dplyr and ggplot2"
 output: github_document
 ---
+Nga Nguyen
 
 ```{r setup}
 library(tidyverse)
@@ -10,90 +11,162 @@ library(knitr)
 library(ggplot2)
 ```
 
-```{r}
-Sortiment_hela <- read.csv("Class_files/systembolaget2018-10-08.csv")
-#head(Sortiment_hela)
+# Systembolaget’s assortment
+## Exercises (training of arrange, filter, mutate, select, %>%)
+Systembolaget’s assortment of beverages from 2018-10-18 is available in the file Class_files/systembolaget2018-10-08.csv. It is downloaded from Systembolaget’s public API and saved in csv-format by the script Class_files/Systembolaget.R. Load its contents by
 
+```{r}
+Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
+glimpse(Sortiment_hela)
+```
+
+The variable Alkoholhalt (alcohol by volume) has been classified as character by read_delim, since it contains a percent sign. Convert it to numeric using mutate by first removing the percent sign (e.g. with gsub) and then transform with as.numeric.
+
+A few wines have been labelled as Röda and Vita instead of Rött vin (red wine) respektive Vitt vin (white wine) in the Varugrupp (group of products) column. Fix this, e.g. by using mutate and ifelse.
+
+```{r}
 Sortiment_ord <- Sortiment_hela %>%
   mutate(Alkoholhalt = as.numeric(gsub("%","",Alkoholhalt))/100) %>%
-  mutate(Varugrupp = ifelse(Varugrupp=="Röda", "Rött vin", ifelse(Varugrupp=="Vita", "Vitt vin", levels(Varugrupp)))) %>%
+  mutate(Varugrupp = ifelse(Varugrupp == "Röda", "Rött vin", ifelse(Varugrupp == "Vita", "Vitt vin", Varugrupp))) %>%
   filter(SortimentText == "Ordinarie sortiment")
 #head(Sortiment_ord)
+```
 
+What beverage has the highest PrisPerLiter? Display the answer (the Namn of the beverage) as dynamically coded in the text body of your .Rmd-document.
+
+```{r}
 PrisMax <- Sortiment_hela %>%
   filter(PrisPerLiter == max(PrisPerLiter)) %>%
   select(Namn)
 PrisMax
+```
 
+Create a new data frame Sortiment_ord with the regular product range (where SortimentText equals Ordinarie sortiment). Make a table (with kable from the knitr-library) of the 10 most expensive (PrisPerLiter) beverages from this range. Use select to select suitable columns for the table.
+
+```{r}
 Expensive <- Sortiment_ord %>%
   arrange(desc(PrisPerLiter)) %>%
   slice(1:10) %>%
   select(Namn, PrisPerLiter, Varugrupp, Alkoholhalt)
-kable(Expensive, format = "html")
+kable(Expensive)
 ```
+
+## Exercises (training of ggplot, geom_point, geom_line, facet_wrap)
+Plot PrisPerLiter against Alkoholhalt, color the points by Varugrupp and consider using a log-scale for PrisPerLiter.
+
 ```{r}
 ggplot(Sortiment_ord, aes(x = Alkoholhalt, y = PrisPerLiter, color = Varugrupp)) + 
   geom_point() + 
   scale_y_log10()
+```
 
+Plot PrisPerLiter (possibly on a log-scale) against Varugrupp. Consider coord_flip to improve readability.
+
+```{r}
 ggplot(Sortiment_ord, aes(x = Varugrupp, y = PrisPerLiter)) + 
   geom_point() + 
   scale_y_log10() + 
   coord_flip()
+```
 
+For the groups of products c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin") of vintage (Argang) 2010-2017, plot  PrisPerLiter against Argang. Try both using a facet for each group and coloring by group in the same facet.
+
+```{r}
 Sortiment_ord %>%
-  filter(Varugrupp %in% c("Vitt vin", "R\303\266tt vin", "Ros\303\251vin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+  filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
   ggplot(aes(x = Argang, y = PrisPerLiter, color = Varugrupp)) + geom_point()
 
 Sortiment_ord %>%
-  filter(Varugrupp %in% c("Vitt vin", "R\303\266tt vin", "Ros\303\251vin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
+  filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2010:2017)) %>%
   ggplot(aes(x = Argang, y = PrisPerLiter)) + geom_point() + facet_wrap(~ Varugrupp)
 ```
 
+## Further excercises
+Use your imagination and keep exploring the data.
+
+# Film events
+
+Stockholm international film festival just started. In Class_files/Film_events_2018-11-07.csv you will find their event schedule as of this morning.
+
 ```{r}
-Film <- read.csv("Class_files/Film_events_2018-11-07.csv")
-FilmSO <- Film %>%
-  filter(eventTicketStatus=="soldout")
-Film %>% 
-  group_by(venueId) %>% 
-  mutate(N=n()) %>%
-  ungroup() %>% 
-  filter(N==max(N)) %>%
-  slice(1) %>%
-  select(venueName)
+Film <- read_csv("Class_files/Film_events_2018-11-07.csv")
 ```
+
+## Exercises (training of arrange, filter, mutate, select, %>%)
+What films are already sold out (for all screenings)?
+
+```{r}
+FilmSO <- Film %>%
+  filter(eventTicketStatus == "soldout")
+```
+
+What venue screens the most number of (unique) films?
+
+```{r}
+Film %>% 
+  group_by(venueName) %>% 
+  summarize(N = n_distinct(filmId)) %>%
+  arrange(desc(N)) %>%
+  head(n = 10) %>%
+  kable()
+```
+
+Plot the proportion of sold out events for each day of the festival.
 
 ```{r}
 ggplot(FilmSO, aes(x = eventDate, y = eventName_en)) + geom_point() 
 ```
+
+# Olympic winter medals
+The file Class_files/Winter_medals2018-09-26.csv contains the number of medals per country and olympic year at the winter olympics since 1980 together with the total population of the country. The data set is scraped from Wikipedia using the script  Class_files/Winter_medals.R which contains more information, in particular on countries that has been split or joined during the period.
+
+Load the file using
+
 ```{r, Olympic winter medals}
 winter_medals <- read.csv("Class_files/Winter_medals2018-09-26.csv")
-head(winter_medals)
+glimpse(winter_medals)
+```
 
-winter_medals <- winter_medals %>%
-  mutate(medals_per_mill = 1000000*Total/Population)
+## Exercises (training of arrange, filter, mutate, select, %>%)
+Create a variable column medals_per_mill, the number of medals per million inhabitants.
+Print a table of the 10 most successful countries, by medals_per_mill, during the 2018 Winter olympics.
 
+```{r}
 winter_medals %>%
+  mutate(medals_per_mill = 1000000*Total/Population) %>%
   filter(Year == 2018) %>%
   arrange(desc(medals_per_mill)) %>%
-  slice(1:10)
+  head(n = 10) %>%
+  kable()
+```
 
+## Exercises (training of ggplot, geom_point, geom_line, facet_wrap)
+Plot the total number of medals against year for Sweden, Norway and Finland in the same figure and separate the countries with a suitable aesthetic (see ?geom_point for a list of aesthetics geom_point understands).
+
+```{r}
 medals_SNF <- winter_medals %>%
   filter(Country %in% c("Sweden", "Norway", "Finland"))
 
-ggplot(medals_SNF, aes(x = Year, y = Total, shape = Country, color = Country)) + 
-  geom_point() + 
-  facet_wrap(~ Country)
+ggplot(medals_SNF, aes(x = Year, y = Total, color = Country)) + 
+  geom_point(aes(shape = Country))
+```
 
+Plot the number of Swedish gold, silver and bronze medals against year (bonus: color the points in gold/silver/bronze).
+
+```{r}
 medals_Swe <- winter_medals %>%
   filter(Country == "Sweden") %>%
   select(Year, Gold, Silver, Bronze)
 total_medals_Swe <- gather(medals_Swe, Medals, value, -Year)
 ggplot(total_medals_Swe, aes(x = Year, y = value, color = Medals)) + 
   geom_point() +
-  scale_color_manual(breaks = c("Gold", "Silver", "Bronze"), values=c("goldenrod3", "gold", "gray75")) +
+  scale_color_manual(breaks = c("Gold", "Silver", "Bronze"), values = c("goldenrod3", "gold", "gray75")) +
   ylab("Medals") 
+```
 
+As previous excercise, but with a “facet” for each of Sweden, Norway and Finland.
+
+```{r}
 total_medals_SNF <- medals_SNF %>%
   select(Country, Year, Gold, Silver, Bronze) %>%
   gather(Medals, value, -Year, - Country)
@@ -103,4 +176,8 @@ ggplot(total_medals_SNF, aes(x = Year, y = value, color = Medals)) +
   ylab("Medals") +
   facet_wrap(~ Country)
 ```
+
+# Gapminder
+Use ggplot to recreate (static versions) of some figures from Hans Rosling’s talks. Data is available in package gapminder.
+
 
