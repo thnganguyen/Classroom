@@ -1,22 +1,32 @@
-Class7
+Class 8: Highdimensional data: Principal components and clusters
 ================
+
+Nga Nguyen
 
 ``` r
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
     ## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
     ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
     ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## ── Conflicts ───────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
-1.  Find the similar obsevations: Glyphs:: stars(): visualize DescTools:PlotFaces() HeatMap: apply for more dimensions and more observations than 2 aboves Covariation: GGally::scatmat() Lines corrplot::corrplot: correlation plot
+1.  Find the similar obsevations:
+
+Glyphs::stars(): visualize
+
+DescTools:PlotFaces()
+
+HeatMap: apply for more dimensions and more observations than 2 aboves
+
+Covariation: GGally::scatmat(), Lines, corrplot::corrplot: correlation plot
 
 ### Election 2018
 
@@ -192,14 +202,17 @@ glimpse(municipalities)
 u <- svd(X)$u
 
 election_data %>%
-  mutate(KOD = paste(formatC(LÄNSKOD, width = 2, flag = "0"), 
-                     formatC(KOMMUNKOD, width = 2, flag = "0"), sep = "")) %>%
+  mutate(LÄNSKOD = formatC(LÄNSKOD, width = 2, flag = "0"),
+         KOMMUNKOD = formatC(KOMMUNKOD, width = 2, flag = "0")) %>%
+  unite(KOD, LÄNSKOD, KOMMUNKOD, sep = "") %>%  # mutate(KOD = paste(formatC(LÄNSKOD, width = 2, flag = "0"), formatC(KOMMUNKOD, width = 2, flag = "0"), sep = ""))
   left_join(municipalities, by = c("KOD" = "Kommunkod")) %>%
   mutate(U1 = u[, 1], U2 = u[, 2]) %>%
   ggplot(aes(x = U1, y = U2, color = Grupp)) + geom_point()
 ```
 
-![](Class7_files/figure-markdown_github/unnamed-chunk-1-4.png) There seems to be a relation between voting patterns and classification, Grupp A2 seems distributing in the left hand side of the plot while A1 is up, B3 is left and up B4 is from center to bottom, C8 is in the right ...
+![](Class7_files/figure-markdown_github/unnamed-chunk-1-4.png)
+
+There seems to be a relation between voting patterns and classification, Grupp A2 seems distributing in the left hand side of the plot while A1 is up, B3 is left and up B4 is from center to bottom, C8 is in the right ...
 
 ### 6 graders
 

@@ -1,18 +1,23 @@
 ---
-title: "Class7"
+title: "Class 8: Highdimensional data: Principal components and clusters"
 output: github_document
 ---
+Nga Nguyen
 
 ```{r setup}
 library(tidyverse)
 ```
 1. Find the similar obsevations:
-Glyphs:: stars(): visualize
-        DescTools:PlotFaces()
-        HeatMap: apply for more dimensions and more observations than 2 aboves
-Covariation: GGally::scatmat()
-             Lines
-             corrplot::corrplot: correlation plot
+
+Glyphs::stars(): visualize
+
+DescTools:PlotFaces()
+
+HeatMap: apply for more dimensions and more observations than 2 aboves
+
+Covariation: GGally::scatmat(),
+Lines,
+corrplot::corrplot: correlation plot
 
 ### Election 2018
 ```{r}
@@ -44,12 +49,14 @@ glimpse(municipalities)
 u <- svd(X)$u
 
 election_data %>%
-  mutate(KOD = paste(formatC(LÄNSKOD, width = 2, flag = "0"), 
-                     formatC(KOMMUNKOD, width = 2, flag = "0"), sep = "")) %>%
+  mutate(LÄNSKOD = formatC(LÄNSKOD, width = 2, flag = "0"),
+         KOMMUNKOD = formatC(KOMMUNKOD, width = 2, flag = "0")) %>%
+  unite(KOD, LÄNSKOD, KOMMUNKOD, sep = "") %>%  # mutate(KOD = paste(formatC(LÄNSKOD, width = 2, flag = "0"), formatC(KOMMUNKOD, width = 2, flag = "0"), sep = ""))
   left_join(municipalities, by = c("KOD" = "Kommunkod")) %>%
   mutate(U1 = u[, 1], U2 = u[, 2]) %>%
   ggplot(aes(x = U1, y = U2, color = Grupp)) + geom_point()
 ```
+
 There seems to be a relation between voting patterns and classification, Grupp A2 seems distributing in the left hand side of the plot while A1 is up, B3 is left and up B4 is from center to bottom, C8 is in the right ...
 
 ### 6 graders
