@@ -1,7 +1,8 @@
 ---
-title: "Class2"
+title: "Class 3: Tidyverse: group_by and summarise, more  ggplot2"
 output: github_document
 ---
+Nga Nguyen
 
 ```{r setup}
 library(tidyverse)
@@ -9,52 +10,82 @@ library(tidyverse)
 library(ggplot2)
 library(chron)
 library(knitr)
+library(stringr)
 ```
+
+# SR songs
+The script Class_files/SR_music.R contains a simple function get_SR_music for grabbing music played on Swedish Radio channels from their open API. Load it by
 
 ```{r, SR songs}
 source("Class_files/SR_music.R")
+```
 
+and grab e.g. the songs on P3 (channel 164) at the turn of last year by
+
+```{r}
 music_day <- get_SR_music(channel = 164, date = "2017-12-31") %>%
   select(title, artist, start_time, stop_time)
+```
 
+If you want multiple dates, the map-functions from the purrr-package (included in the tidyverse) are convenient (more about these later on in the course). Grabbing music played from e.g. 2018-01-01 to 2018-01-07 into music is done by
+
+```{r}
 days <- seq(as.Date("2018-01-01"), as.Date("2018-01-07"), "days")
 
 music_days <- map_df(days, get_SR_music, channel = 164) %>%
   select(title, artist, start_time, stop_time)
+```
 
+Note: Data is not entirely clean and the same artist/song may be coded in multiple ways (e.g. Cherrie & Z.E., Cherrie, Z.e and  Cherrie, Z.E). You may ignore this for now.
+
+Pick a date, or a sequence of dates, and list the 5 most played songs.
+
+```{r}
 by_title_day <- music_day %>%
   group_by(title) %>%
   summarise(numberViews = n()) %>%
   select(title, numberViews) %>%
   arrange(desc(numberViews))
 
-mostViews <- by_title_day %>% slice(1:5) %>% select(title)
+mostViews <- by_title_day %>% 
+  select(title) %>%
+  head(n = 5)
 mostViews
+```
 
-by_title_days <- music_days %>%
-  group_by(title) %>%
-  summarise(numberViews = n()) %>%
-  select(title, numberViews) %>%
-  arrange(desc(numberViews))
+What artist has the most number of different songs played over some sequence of days?
 
-mostViews <- by_title_days %>% slice(1:5) %>% select(title)
-mostViews
-
+```{r}
 by_artist <- music_days %>%
   group_by(artist) %>%
   summarise(numberSongs = n()) %>%
   select(artist, numberSongs) %>%
   arrange(desc(numberSongs))
-mostSongs <- by_artist %>% slice(1) %>% select(artist)
+mostSongs <- by_artist %>% 
+  slice(1) %>% 
+  select(artist)
 mostSongs
 ```
 
+Visualise the distribution of song durations.
+
 ```{r}
 music_days <- music_days %>%
-  mutate(duration = stop_time-start_time)
+  mutate(duration = as.numeric(stop_time-start_time))
 
-ggplot(music_days, aes(x = duration)) + geom_histogram(bins = 100) + ggtitle("The distribution of song durations")
+ggplot(music_days, aes(x = duration)) + geom_histogram(bins = 50) + ggtitle("The distribution of song durations")
+```
 
+Pick a sequence of dates and visualise how the songs start_times are distributed over the day. Repeat for another channel, e.g. P2 (channel 163). You can grab components of a date-time (POSIXct) object with format as in
+```{r}
+as.POSIXct("2018-01-01 23:57:04 CET") %>% format("%H:%M")
+```
+
+for extracting the hour and minute, see ?format.POSIXct for more examples. Note that the above code results in a value of character-type, you may want to further convert to numeric format (e.g. minutes or hours after midnight) before plotting.
+
+Visualise the number of hours spent playing music each day over a sequence of dates.
+
+```{r}
 music_days <- music_days %>%
   mutate(time = as.numeric(chron::times(as.POSIXct(start_time) %>% format("%H:%M:%S"))))
 
@@ -74,39 +105,104 @@ music_days_hour <- music_days %>%
 ggplot(music_days_hour, aes(x = date, y = nHour)) + geom_point() + coord_flip()
 ```
 
-```{r, Insurance claims from kammarkollegiet}
-claim_data <- read.csv("Class_files/claims.csv")
+# Insurance claims from kammarkollegiet
+Kammarkollegiet is a public agency that among other things issue insurances. The file Class_files/claims.csv contains data on claims from one of their personal insurances. Each claim has an unique Claim id, a Claim date, a Closing date and a number of Payments disbursed at Payment dates. If the claim is not closed (there may be more payments coming) Closing date is given value NA. Null claims, i.e. claims that has been closed without payment, are not included.
 
+Read the data by
+
+```{r, Insurance claims from kammarkollegiet}
+claim_data <- read_csv("Class_files/claims.csv")
+glimpse(claim_data)
+```
+
+Plot the number of claims per year (each Claim id should only be counted once!).
+
+```{r}
+colnames(claim_data) <- str_replace(colnames(claim_data), " ", "_")
 claim_by_year <- claim_data %>%
-  mutate(year = as.numeric(as.POSIXct(Claim.date) %>% format("%Y")))
+  mutate(year = as.numeric(as.POSIXct(Claim_date) %>% format("%Y"))) %>%
+  select(Claim_id, year) %>%
+  distinct(Claim_id, .keep_all = TRUE)
 
 ggplot(claim_by_year, aes(x = year)) + geom_bar()
+```
 
-mytab <- claim_by_year %>% 
-  filter(year>=2010) %>%
-  mutate(closing.year = as.numeric(as.POSIXct(Closing.date) %>% format("%Y"))) %>%
-  mutate(duration = (closing.year - year)) %>%
+Actuaries are very fond of loss triangles. This is a table where the value on row i, column j is the sum of all payments on claims with Claim date in year i that are disbursed until the j:th calendar year after the year of the claim/accident. The table will be a triangle since future payments are not available.
+
+For claims made since 2010, compute the loss triange and print it with knitr::kable. Try to do it in a single sequence of pipes. If future payments are coded as NA, using options(knitr.kable.NA = '') will result in a nicer looking table.
+
+```{r}
+mytab <- claim_data %>% 
+  mutate(year = as.numeric(as.POSIXct(Claim_date) %>% format("%Y"))) %>%
+  filter(year >= 2010) %>%
+  mutate(closing_year = as.numeric(as.POSIXct(Closing_date) %>% format("%Y"))) %>%
+  mutate(duration = (closing_year - year)) %>%
   group_by(duration, year) %>%
   summarize(loss = sum(Payment)) %>%
   filter(!is.na(duration)) %>%
   spread(duration, loss)
 
-kable(mytab, format = "html")
+kable(mytab)
 options(knitr.kable.NA = '')
 ```
 
+# Election 2018
+All political parties participating in the 2018 Swedish elections can be downloaded from Valmyndigheten by
+
 ```{r, Election 2018}
 parties_2018 <- read_csv2("https://data.val.se/val/val2018/valsedlar/partier/deltagande_partier.skv", locale = locale("sv", encoding = "ISO-8859-1"))
+glimpse(parties_2018)
+```
 
+How many unique parties participated in each of the three elections (VALTYP equals R for Riksdagen, L for Landsting and K for Kommun)? Note that the same party may appear multiple times (based on e.g. multiple reasons of inclusion in DELTAGANDEGRUND)
+
+```{r}
 parties_2018 %>%
   group_by(VALTYP) %>%
   summarize(n = n_distinct(PARTIKOD))
+```
 
+How many local parties (parties only participating within a single VALKRETSKOD) participated in the Kommunalval (VALTYP equals K)?
+
+```{r}
 parties_2018 %>%
   filter(VALTYP == "K") %>%
   group_by(VALKRETSKOD) %>%
   summarize(n = n_distinct(PARTIKOD))
 ```
 
+# Systembolaget’s assortment
+As in last class load Systembolaget’s assortment and select the regular product range.
 
+```{r}
+Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
+glimpse(Sortiment_hela)
+```
+
+How many beverages are there in each group of products (Varugrupp)? Use filter and is.na to filter out beverages where  Varugrupp is not available.
+
+```{r}
+Sortiment_hela %>%
+  group_by(Varugrupp) %>%
+  summarize(number = n()) %>%
+  filter(!is.na(Varugrupp))
+```
+
+Select red wines of vintage 2011-2018. Compute the mean PrisPerLiter for each vintage and visualise using ggplot.
+
+```{r}
+Sortiment_hela %>%
+  filter(Varugrupp == "Rött vin", Argang %in% c(2011:2018)) %>%
+  group_by(Argang) %>%
+  summarize(mean_pris = mean(PrisPerLiter, na.rm = TRUE)) %>%
+  ggplot(aes(x = Argang, y = mean_pris)) + geom_col()
+```
+
+List the cheapest beverage (by PrisPerLiter) in each Varugrupp.
+
+```{r}
+Sortiment_hela %>%
+  group_by(Varugrupp) %>%
+  summarize(min_bev = min(PrisPerLiter, na.rm = TRUE))
+```
 
