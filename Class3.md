@@ -1,19 +1,21 @@
-Class3
+Class 4: Exploratory data analysis
 ================
+
+Nga Nguyen
 
 ``` r
 library(ggplot2)
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ tibble  1.4.2     ✔ purrr   0.2.5
     ## ✔ tidyr   0.8.1     ✔ dplyr   0.7.6
     ## ✔ readr   1.1.1     ✔ stringr 1.3.1
     ## ✔ tibble  1.4.2     ✔ forcats 0.3.0
 
-    ## ── Conflicts ───────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
@@ -24,6 +26,8 @@ library(readr)
 
 Systembolaget’s assortment
 --------------------------
+
+Use filter to extract the groups of products c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin") of vintage 2011-2018.
 
 ``` r
 Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
@@ -54,35 +58,49 @@ Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
 
 mydata <- Sortiment_hela %>%
   filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2011:2018))
+```
 
+ggplot with aes(x = Argang), geom\_bar()
+
+``` r
 ggplot(mydata, aes(x = Argang)) + geom_bar()
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-1.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-1-1.png)
+
+ggplot with aes(x = Argang), geom\_bar() and facet\_wrap(~ Varugrupp) (try adding scale = "free\_y" to facet\_wrap)
 
 ``` r
 ggplot(mydata, aes(x = Argang)) + geom_bar() + facet_wrap(~ Varugrupp, scale = "free_y")
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-2.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+ggplot with aes(x = Argang, fill = Varugrupp) and geom\_bar()
 
 ``` r
 ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar()
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-3.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+geom\_bar(position = "dodge")
 
 ``` r
 ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "dodge")
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-4.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+geom\_bar(position = "fill")
 
 ``` r
 ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "fill")
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-5.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+Recreate the following plot (Red wines in the regular range)
 
 ``` r
 mydata %>%
@@ -90,17 +108,21 @@ mydata %>%
   ggplot(aes(x = as.factor(Argang), y = PrisPerLiter)) + geom_boxplot() + ggtitle("Red wines")
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-6.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+Make a box\_plot of PrisPerLiter on the log-scale,with x = Varugrupp. Try coord\_flip to improve readability.
 
 ``` r
 ggplot(mydata, aes(x = as.factor(Varugrupp), y = PrisPerLiter)) + geom_boxplot() + 
   scale_y_log10() + coord_flip()
 ```
 
-![](Class3_files/figure-markdown_github/Systembolaget’s%20assortment-7.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Winter medals
 -------------
+
+The following code transforms the medals data to “long” format (more about this next time!) which is easier to work with in ggplot:
 
 ``` r
 medal_long <- read_csv("Class_files/Winter_medals2018-09-26.csv") %>% 
@@ -119,6 +141,8 @@ medal_long <- read_csv("Class_files/Winter_medals2018-09-26.csv") %>%
     ##   `Country Code` = col_character(),
     ##   Population = col_double()
     ## )
+
+Check the result with glimpse(medal\_long). Use group\_by and summarise in order to aggregate the total number of medals of each denomination (Gold/Silver/Bronze) for each country. Illustrate the relative proportions of denominations, e.g. by geom\_bar with stat = "identity and position = "fill".
 
 ``` r
 glimpse(medal_long)
@@ -142,10 +166,14 @@ medal_long %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
-![](Class3_files/figure-markdown_github/Winter%20medals-1.png)
+![](Class3_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 First math course
 -----------------
+
+The file Class\_files/MM2001\_results.csv contains the age, sex, and grade on course Matematik I (MM2001) of 3201 students aged 18-40 years. An NA in the grade column means that the student has been registered but not yet completed the course.
+
+Use ggplot to explore relations between the variables.
 
 ``` r
 Course_result <- read_csv("Class_files/MM2001_results.csv")

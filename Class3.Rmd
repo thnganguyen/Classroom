@@ -1,7 +1,8 @@
 ---
-title: "Class3"
+title: "Class 4: Exploratory data analysis"
 output: github_document
 ---
+Nga Nguyen
 
 ```{r setup}
 library(ggplot2)
@@ -11,32 +12,74 @@ library(readr)
 ```
 
 ## Systembolaget’s assortment
+Use filter to extract the groups of products c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin") of vintage 2011-2018. 
+
 ```{r, Systembolaget’s assortment}
 Sortiment_hela <- read_csv("Class_files/systembolaget2018-10-08.csv")
 #str(Sortiment_hela)
 
 mydata <- Sortiment_hela %>%
   filter(Varugrupp %in% c("Vitt vin", "Rött vin", "Rosévin", "Mousserande vin"), Argang %in% c(2011:2018))
+```
 
+ggplot with aes(x = Argang), geom_bar()
+
+```{r}
 ggplot(mydata, aes(x = Argang)) + geom_bar()
-ggplot(mydata, aes(x = Argang)) + geom_bar() + facet_wrap(~ Varugrupp, scale = "free_y")
-ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar()
-ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "dodge")
-ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "fill")
+```
 
+ggplot with aes(x = Argang), geom_bar() and facet_wrap(~ Varugrupp) (try adding scale = "free_y" to facet_wrap)
+
+```{r}
+ggplot(mydata, aes(x = Argang)) + geom_bar() + facet_wrap(~ Varugrupp, scale = "free_y")
+```
+
+ggplot with aes(x = Argang, fill = Varugrupp) and
+geom_bar()
+
+```{r}
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar()
+```
+
+geom_bar(position = "dodge")
+
+```{r}
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "dodge")
+```
+
+geom_bar(position = "fill")
+
+```{r}
+ggplot(mydata, aes(x = Argang, fill = Varugrupp)) + geom_bar(position = "fill")
+```
+
+Recreate the following plot (Red wines in the regular range) 
+
+```{r}
 mydata %>%
   filter(Varugrupp == "Rött vin") %>%
   ggplot(aes(x = as.factor(Argang), y = PrisPerLiter)) + geom_boxplot() + ggtitle("Red wines")
+```
 
+Make a box_plot of PrisPerLiter on the log-scale,with x = Varugrupp. Try coord_flip to improve readability.
+
+```{r}
 ggplot(mydata, aes(x = as.factor(Varugrupp), y = PrisPerLiter)) + geom_boxplot() + 
   scale_y_log10() + coord_flip()
 ```
 
 ## Winter medals
+The following code transforms the medals data to “long” format (more about this next time!) which is easier to work with in ggplot:
+
 ```{r, Winter medals}
 medal_long <- read_csv("Class_files/Winter_medals2018-09-26.csv") %>% 
   select(-Total) %>% 
   gather(Denomination, Number, c("Gold", "Silver", "Bronze"))
+```
+
+Check the result with glimpse(medal_long). Use group_by and summarise in order to aggregate the total number of medals of each denomination (Gold/Silver/Bronze) for each country. Illustrate the relative proportions of denominations, e.g. by geom_bar with  stat = "identity and position = "fill".
+
+```{r}
 glimpse(medal_long)
 
 medal_long %>%
@@ -48,6 +91,10 @@ medal_long %>%
 ```
 
 ## First math course
+The file Class_files/MM2001_results.csv contains the age, sex, and grade on course Matematik I (MM2001) of 3201 students aged 18-40 years. An NA in the grade column means that the student has been registered but not yet completed the course.
+
+Use ggplot to explore relations between the variables.
+
 ```{r, First math course}
 Course_result <- read_csv("Class_files/MM2001_results.csv")
 
